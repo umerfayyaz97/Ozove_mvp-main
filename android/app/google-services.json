@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "858599621341",
+    "firebase_url": "https://oz-ove-1-default-rtdb.firebaseio.com",
+    "project_id": "oz-ove-1",
+    "storage_bucket": "oz-ove-1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:858599621341:android:f3ea7858a44f7f461d5134",
+        "android_client_info": {
+          "package_name": "com.ozove"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "858599621341-7cv6nogjnq2stdklo4fc0a15gkm7pjba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ozove",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "858599621341-e823upusu29g3nud7hnlvivvus2ajv8v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB26QPdxusAS-tD7DPcFfNXnJabE_TK174"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "858599621341-e823upusu29g3nud7hnlvivvus2ajv8v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

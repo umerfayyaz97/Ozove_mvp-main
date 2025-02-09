@@ -1,0 +1,43 @@
+buildscript {
+    ext {
+        buildToolsVersion = "34.0.0"
+        minSdkVersion = 23
+        compileSdkVersion = 34
+        targetSdkVersion = 34
+        ndkVersion = "26.1.10909125"
+        kotlinVersion = "1.9.22"
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.0.2") // Specify Gradle version
+        classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' } // For additional dependencies if needed
+    }
+}
+
+
+// This is required to enable build caching for faster builds.
+// buildCache {
+//     local {
+//         directory = "$rootDir/.gradle/caches/build-cache"
+//     }
+// }
+
+// // Add task to clean the project
+// task clean(type: Delete) {
+//     delete rootProject.buildDir
+// }
