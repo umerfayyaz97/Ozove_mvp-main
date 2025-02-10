@@ -9,41 +9,18 @@ import firestore from '@react-native-firebase/firestore';
 import {useDispatch} from 'react-redux';
 import {setBookings} from '../Redux/Features/BookingsSlice';
 import {useAppSelector} from '../hooks/useRedux';
-import {Booking} from './Types/ozove';
+import {Booking, bookingData} from './Types/ozove';
 import axios from 'axios';
 import {getAuth} from '@react-native-firebase/auth';
 
-interface bookingData {
-  OrderId: string;
-  From: string;
-  PickupCoordinates: {
-    lat: number;
-    long: number;
-  };
-  DropoffCoordinates: {
-    lat: number;
-    long: number;
-  };
-  To: string;
-  Date: string;
-  Time: string;
-  selectedVehicle: number | null;
-  selectedAdditonalServices: number | null;
-  createdAtDate: string;
-  contactDetails: string;
-  driverNote: string;
-  TimeStamp: string;
-  Status: string;
-}
-
 interface AuthContextType {
   testFunction: () => void;
-  _handleBooking: (booking: Booking) => Promise<void>;
+  _handleBooking: (orderID: string, status: string) => Promise<void>;
   _getStripePublishableKey: () => Promise<string | undefined>;
   _getGeoApiKey: () => Promise<string | undefined>;
   _getlocationSuggestions: (query: string) => Promise<string[] | undefined>;
   _updateBookingData: (key: string, value: any) => void;
-  _update_BookingData: (updates: any) => void;
+  _update_BookingData: (updates: any) => Promise<void>;
   Generate_OrderID: () => string;
   ServerLoading: boolean;
   bookingData: bookingData;
@@ -81,6 +58,9 @@ export const OzoveProvider: React.FC<OzoveProviderProps> = ({children}) => {
     driverNote: '',
     TimeStamp: '',
     Status: '',
+    AdditionalServices: [],
+    PassengerCount: null,
+    TotalPrice: null,
   });
 
   const dispatch = useDispatch();
@@ -113,13 +93,16 @@ export const OzoveProvider: React.FC<OzoveProviderProps> = ({children}) => {
               To: data.To || '',
               Date: data.Date || '',
               Time: data.Time || '',
-              selectedVehicle: data.selectedVehicle || null,
-              selectedAdditonalServices: data.selectedAdditonalServices || null,
+              selectedVehicle: data.selectedVehicle,
+              selectedAdditonalServices: data.selectedAdditonalServices,
               createdAtDate: data.createdAtDate || '',
               contactDetails: data.contactDetails || '',
               driverNote: data.driverNote || '',
               TimeStamp: data.TimeStamp || '',
               Status: data.Status || '',
+              AdditionalServices: data.AdditionalServices || [],
+              PassengerCount: data.PassengerCount || 0,
+              TotalPrice: data.TotalPrice || 0,
             };
           });
 
@@ -133,7 +116,7 @@ export const OzoveProvider: React.FC<OzoveProviderProps> = ({children}) => {
 
     // Cleanup subscription on component unmount
     return () => unsubscribe();
-  }, [User?.uid, dispatch]);
+  }, [auth.currentUser?.uid, dispatch]);
 
   const testFunction = () => {
     console.log('Test from Context test function');
@@ -161,6 +144,9 @@ export const OzoveProvider: React.FC<OzoveProviderProps> = ({children}) => {
       driverNote: '',
       TimeStamp: '',
       Status: '',
+      AdditionalServices: [],
+      PassengerCount: 0,
+      TotalPrice: 0,
     });
   };
   const _updateBookingData = (key: string, value: any) => {
@@ -170,7 +156,7 @@ export const OzoveProvider: React.FC<OzoveProviderProps> = ({children}) => {
     }));
   };
 
-  const _update_BookingData = (updates: any) => {
+  const _update_BookingData = async (updates: any): Promise<void> => {
     set_bookingData((prev: any) => {
       const newData = {...prev};
       updates.forEach(({key, value}: any) => {
@@ -227,7 +213,10 @@ export const OzoveProvider: React.FC<OzoveProviderProps> = ({children}) => {
       if (!apiKey) {
         return undefined;
       }
-      const perthBBox = '115.7,-32.1,116.0,-31.8'; // minLon, minLat, maxLon, maxLat
+      // Precise Perth bounding box coordinates (SW lng,lat, NE lng,lat)
+      const PERTH_BBOX = [115.8613, -32.0208, 116.0457, -31.9523];
+      // Central point of Perth (calculated midpoint)
+      const PERTH_CENTER = [115.9535, -31.98655]; // (115.8613+116.0457)/2, (-32.0208+-31.9523)/2
 
       const response = await axios.get(
         'https://api.geoapify.com/v1/geocode/autocomplete',
@@ -237,8 +226,9 @@ export const OzoveProvider: React.FC<OzoveProviderProps> = ({children}) => {
             apiKey: apiKey,
             format: 'json',
             limit: 5,
-            bbox: perthBBox, // Add bounding box
-            filter: 'countrycode:au', // Restrict to Australia
+            bbox: PERTH_BBOX,
+            filter: `countrycode:au`, // Combined filters
+            lang: 'en',
           },
         },
       );
@@ -286,36 +276,25 @@ export const OzoveProvider: React.FC<OzoveProviderProps> = ({children}) => {
     }
   };
 
-  const _handleBooking = async (booking: Booking): Promise<void> => {
+  const _handleBooking = async (
+    OrderId: string,
+    Status: string,
+  ): Promise<void> => {
     setLoading(true);
-    //const booking_Data = {...booking, OrderId: Generate_OrderID()};
-    set_bookingData(prev => {
-      return {
-        ...prev,
-        OrderId: Generate_OrderID(),
-        Status: 'Pending',
+
+    if ((bookingData?.OrderId && OrderId !== '', Status !== '')) {
+      const data = {
+        ...bookingData,
+        OrderId: OrderId,
+        Status: Status,
       };
-    });
-    console.log('Booking', booking);
-    if (bookingData?.OrderId) {
+
       try {
         await firestore()
           .collection('bookings')
           .doc(auth.currentUser?.uid)
           .collection('individual_bookings')
-          // .add({
-          //   OrderId: booking.OrderId,
-          //   Vechicle: booking.Vechicle,
-          //   date: booking.date,
-          //   time: booking.time,
-          //   from: booking.from,
-          //   to: booking.to,
-          //   price: booking.price,
-          //   passongers: booking.passongers,
-          //   createdAt: booking.createdAt,
-          //   createdBy: booking.createdBy,
-          // })
-          .add(bookingData)
+          .add(data)
           .then(() => {
             setLoading(false);
             reinitialize();

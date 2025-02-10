@@ -9,7 +9,6 @@ import {
   ScrollView,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {Radio} from 'native-base';
 import {useAppSelector} from '../../hooks/useRedux';
 import {getAuth} from '@react-native-firebase/auth';
 

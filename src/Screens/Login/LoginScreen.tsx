@@ -27,47 +27,52 @@ const LoginScreen = ({navigation}: any) => {
   const phoneInput = useRef<PhoneInput>(null);
 
   const [confirm, setConfirm] = useState(null);
-  const [code, setCode] = useState('');
 
-  const {signInWithGoogle} = useAuth();
+  const {signInWithGoogle, sendOtp, confirmOtp, isOtpSent} = useAuth();
+  const [code, setCode] = useState('');
+  const [localOtpSent, setLocalOtpSent] = useState(false);
 
   // Handle login
   function onAuthStateChanged(user: any) {
     if (user) {
-      navigation.replace('Main');
+      navigation.replace('MainDrawer');
     }
   }
-
+  // Sync with context state
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
-  }, []);
+    setLocalOtpSent(isOtpSent);
+  }, [isOtpSent]);
 
-  const handleLogin = () => {
-    //console.log('Phone Number: ', formattedValue);
-    navigation.push('Verify');
+  const handleLogin = async () => {
+    try {
+      await sendOtp(formattedValue);
+    } catch (error) {
+      //alert('Failed to send OTP: ' + error.message);
+      console.log('Failed to send OTP: ' + error.message);
+    }
   };
 
-  // Handle the button press
-  async function signInWithPhoneNumber(phoneNumber: any) {
-    const confirmation = await auth()
-      .signInWithPhoneNumber(phoneNumber)
-      .then((e: any) => {
-        console.log('OTP has been sent to the user: ', phoneNumber);
-      })
-      .catch(e => {
-        console.log(e);
-      });
-    setConfirm(confirmation);
-  }
-
-  async function confirmCode() {
+  const confirmCode = async () => {
     try {
-      await confirm?.confirm(code);
+      await confirmOtp(code);
     } catch (error) {
-      console.log('Invalid code.');
+      //alert('Invalid OTP code');
+      console.log('Invalid OTP');
     }
-  }
+  };
+
+  // // Handle the button press
+  // async function signInWithPhoneNumber(phoneNumber: any) {
+  //   const confirmation = await auth()
+  //     .signInWithPhoneNumber(phoneNumber)
+  //     .then((e: any) => {
+  //       console.log('OTP has been sent to the user: ', phoneNumber);
+  //     })
+  //     .catch(e => {
+  //       console.log(e);
+  //     });
+  //   setConfirm(confirmation);
+  // }
 
   const handleGoogleLogin = async () => {
     await signInWithGoogle();
@@ -84,17 +89,14 @@ const LoginScreen = ({navigation}: any) => {
         }}>
         <View style={{marginTop: 100}}>
           <View style={{justifyContent: 'center', alignItems: 'center'}}>
+            <View style={{marginBottom: 10}}>
+              <Text
+                style={{fontSize: 30, fontWeight: 'bold', color: '#141921'}}>
+                Welcome to{' '}
+              </Text>
+            </View>
             <MainLogo />
-            <Text
-              style={{
-                color: '#FFAF19',
-                fontWeight: 600,
-                fontSize: 20,
-                marginTop: 5,
-                lineHeight: 20,
-              }}>
-              Welcome, to Oz Ove
-            </Text>
+
             <Text
               style={{
                 color: '#333',
@@ -180,16 +182,27 @@ const LoginScreen = ({navigation}: any) => {
                   flexDirection: 'row',
                   justifyContent: 'space-evenly',
                 }}>
-                <View style={{padding: 10, margin: 10}}>
-                  <TouchableOpacity onPress={handleGoogleLogin}>
-                    <Google />
+                <View style={{margin: 10, flex: 1}}>
+                  {/* Google Sign-In Button */}
+                  <TouchableOpacity
+                    onPress={handleGoogleLogin}
+                    style={{
+                      backgroundColor: '#fff',
+                      borderWidth: 1,
+                      borderColor: '#ccc',
+                      borderRadius: 5,
+                      paddingVertical: 15,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginHorizontal: 20,
+                    }}>
+                    <Google style={{marginRight: 10}} width={20} height={20} />
+                    <Text
+                      style={{color: '#333', fontWeight: '600', fontSize: 16}}>
+                      Sign in with Google
+                    </Text>
                   </TouchableOpacity>
-                </View>
-                <View style={{padding: 10, margin: 10}}>
-                  <Apple />
-                </View>
-                <View style={{padding: 10, margin: 10}}>
-                  <Facebook />
                 </View>
               </View>
               <View style={{marginTop: 20, flexDirection: 'row'}}>

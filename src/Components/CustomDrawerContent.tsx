@@ -7,12 +7,13 @@ import {getAuth} from '@react-native-firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const CustomDrawerContent = (props: any) => {
+  const user = useAppSelector(state => state.user.user);
+  const userTheme = user?.deviceDetails;
   const {signOut} = useAuth();
   const auth = getAuth();
 
   const handleSignOut = async () => {
     await signOut();
-    props.navigation.navigate('Main');
   };
 
   const menuItems = [
@@ -39,7 +40,19 @@ const CustomDrawerContent = (props: any) => {
   return (
     <View style={styles.container}>
       {/* Profile Section */}
-      <View style={styles.profileSection}>
+      <View
+        style={[
+          styles.profileSection,
+          userTheme
+            ? {
+                backgroundColor: userTheme.bgColor
+                  ? userTheme.bgColor
+                  : '#F4AF48',
+              }
+            : {
+                backgroundColor: '#F4AF48',
+              },
+        ]}>
         <View style={styles.profileContent}>
           <Image
             source={{
@@ -48,7 +61,19 @@ const CustomDrawerContent = (props: any) => {
             }}
             style={styles.profileImage}
           />
-          <Text style={styles.profileName}>Leslie Alexander</Text>
+          <Text
+            style={[
+              styles.profileName,
+              userTheme
+                ? {
+                    color: userTheme.textColor ? userTheme.textColor : '#000',
+                  }
+                : {
+                    color: '#000',
+                  },
+            ]}>
+            {auth.currentUser?.displayName}
+          </Text>
           <TouchableOpacity
             style={styles.editProfileButton}
             onPress={() => props.navigation.navigate('Account')}>
@@ -85,7 +110,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   profileSection: {
-    backgroundColor: '#F4AF48',
     paddingTop: 60,
     paddingBottom: 20,
   },

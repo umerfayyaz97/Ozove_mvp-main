@@ -10,11 +10,15 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {useAuth} from '../../Context/authContext';
 
 export default function AppSettingsScreen() {
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
   const navigation = useNavigation();
-
+  const {signOut} = useAuth();
+  const handleSignOut = async () => {
+    await signOut();
+  };
   const favorites = [
     {id: 1, type: 'Home', location: 'Downtown Perth', status: 'set'},
     {id: 2, type: 'Work', location: '', status: 'add'},
@@ -134,7 +138,7 @@ export default function AppSettingsScreen() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.signOutButton}>
+        <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
           <Icon name="log-out-outline" size={20} color="#FF3B30" />
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>

@@ -1,25 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {bookingData} from '../../Context/Types/ozove';
 //import {Booking} from '../../Context/Types/ozove';
-interface bookingData {
-  From: string;
-  PickupCoordinates: {
-    lat: number;
-    long: number;
-  };
-  DropoffCoordinates: {
-    lat: number;
-    long: number;
-  };
-  To: string;
-  Date: string;
-  Time: string;
-  selectedVehicle: number | null;
-  selectedAdditonalServices: number | null;
-  createdAtDate: string;
-  contactDetails: string;
-  driverNote: string;
-  TimeStamp: string;
-}
 interface BookingsState {
   bookings: bookingData[];
 }

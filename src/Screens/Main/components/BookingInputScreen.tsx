@@ -1,47 +1,20 @@
-import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
-import React, {useState} from 'react';
-import BackIcon from '../../../../assests/back_icon.svg';
-
-import Callender from '../../../../assests/Callender.svg';
-import Clock from '../../../../assests/Clock.svg';
-import Per_person_price from '../../../../assests/per_person_price_icon.svg';
-
-import {styles} from '../../../Components/MainStyles';
+import {View, Text, TouchableOpacity, Image, Modal, Switch} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Styles, styles} from '../../../Components/MainStyles';
 import {
-  Avatar,
-  Box,
-  Button,
-  CheckIcon,
-  Divider,
-  HStack,
-  Modal,
-  Select,
-  TextField,
-  VStack,
-} from 'native-base';
-import {AdditionalServices, VehicleData} from '../../../Context/Types/ozove';
+  BookingInputScreenProps,
+  ServiceState,
+} from '../../../Context/Types/ozove';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {times} from '../../../Components/helpers';
 import Entypo from 'react-native-vector-icons/Entypo';
 
-interface BookingInputScreenProps {
-  selectedVehicle: number | null;
-  Vechicle_data: VehicleData[];
-  setShowDatePicker: (value: boolean) => void;
-  date: Date;
-  showDatePicker: boolean;
-  setDate: (value: Date) => void;
-  selectedTime: string;
-  setSelectedTime: (value: string) => void;
-  setSelectedVehicle: (value: number | null) => void;
-  Additional_services: any[];
-  selecetedAdditonalServices: number | null;
-  setSelectedAdditonalServices: (value: number | null) => void;
-  setShowNextScreen: (value: number) => void;
-  showNextScreen: number;
-  pickupLocation: string;
-  dropoffLocation: string;
-}
+import BackIcon from '../../../../assests/back_icon.svg';
+import Callender from '../../../../assests/Callender.svg';
+import Clock from '../../../../assests/Clock.svg';
+import Per_person_price from '../../../../assests/per_person_price_icon.svg';
+import firestore from '@react-native-firebase/firestore';
+import {ScrollView} from 'react-native-gesture-handler';
 
 const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
   selectedVehicle,
@@ -60,7 +33,213 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
   showNextScreen,
   pickupLocation,
   dropoffLocation,
+
+  setServicesState,
+  servicesState,
+  vehiclePricing,
+  setVehiclePricing,
+  distance,
+  duration,
 }) => {
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+
+  console.log('>>', servicesState);
+
+  // Update the initial state for vehiclePricing
+
+  const [loading, setLoading] = useState(true);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Helper function to get initial state based on service type
+  const getInitialServiceState = (serviceTitle: string) => {
+    const service = Additional_services.find(s => s.title === serviceTitle);
+    if (!service) return {};
+
+    switch (service.type) {
+      case 'hourly':
+        return {hours: 3};
+      case 'split':
+        return {split: false};
+      case 'vehicle':
+        return {vehicleCount: 1};
+      default:
+        return {};
+    }
+  };
+
+  const handleServicePress = (serviceTitle: string) => {
+    setSelectedServices(prev =>
+      prev.includes(serviceTitle)
+        ? prev.filter(title => title !== serviceTitle)
+        : [...prev, serviceTitle],
+    );
+
+    // Initialize service state if it doesn't exist
+    if (!servicesState[serviceTitle]) {
+      setServicesState((prev: any) => ({
+        ...prev,
+        [serviceTitle]: getInitialServiceState(serviceTitle),
+      }));
+    }
+  };
+
+  // Fetch pricing data from Firestore
+  const readVehiclePricing = async () => {
+    try {
+      const docRef = firestore()
+        .collection('PRICE_CALCULATOR')
+        .doc('VehicleRates');
+      const documentSnapshot = await docRef.get();
+      if (documentSnapshot.exists) {
+        const pricingData = documentSnapshot.data();
+        setVehiclePricing({
+          van: pricingData?.van || {minimumFare: 0},
+          miniBus: pricingData?.miniBus || {minimumFare: 0},
+          bus: pricingData?.bus || {minimumFare: 0},
+        });
+        // Set Van as the default selected vehicle (index 0)
+        setSelectedVehicle(0);
+      }
+    } catch (error) {
+      console.error('Error fetching pricing:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    readVehiclePricing();
+  }, []);
+
+  const renderServiceContent = (service: any, serviceState: ServiceState) => {
+    //const serviceState = servicesState[service.id] || {};
+    console.log('>>', servicesState);
+    switch (service.type) {
+      case 'hourly':
+        return (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 8,
+            }}>
+            <Text style={{color: '#666', marginRight: 16}}>Book for:</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <TouchableOpacity
+                onPress={() => {
+                  const newHours = Math.max(3, (serviceState.hours || 3) - 1);
+                  setServicesState((prev: any) => ({
+                    ...prev,
+                    [service.title]: {...serviceState, hours: newHours},
+                  }));
+                }}
+                style={Styles.hourButton}>
+                <Text style={{fontSize: 18}}>-</Text>
+              </TouchableOpacity>
+              <Text style={{paddingHorizontal: 16, fontSize: 16}}>
+                {serviceState.hours || 3}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  const newHours = (serviceState.hours || 3) + 1;
+                  setServicesState((prev: any) => ({
+                    ...prev,
+                    [service.title]: {...serviceState, hours: newHours},
+                  }));
+                }}
+                style={Styles.hourButton}>
+                <Text style={{fontSize: 18}}>+</Text>
+              </TouchableOpacity>
+              <Text style={{marginLeft: 16, color: '#666'}}>Hours</Text>
+            </View>
+          </View>
+        );
+
+      case 'split':
+        return (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingVertical: 8,
+            }}>
+            <Text style={{color: '#666'}}>Enable split payment</Text>
+            <Switch
+              value={serviceState.split || false}
+              onValueChange={value => {
+                setServicesState((prev: any) => ({
+                  ...prev,
+                  [service.title]: {...serviceState, split: value},
+                }));
+              }}
+              trackColor={{false: '#767577', true: '#FFAF19'}}
+              thumbColor="#fff"
+            />
+          </View>
+        );
+
+      case 'vehicle':
+        return (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 8,
+            }}>
+            <Text style={{color: '#666', marginRight: 16}}>Vehicles:</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <TouchableOpacity
+                onPress={() => {
+                  const newCount = Math.max(
+                    1,
+                    (serviceState.vehicleCount || 1) - 1,
+                  );
+                  setServicesState((prev: any) => ({
+                    ...prev,
+                    [service.title]: {...serviceState, vehicleCount: newCount},
+                  }));
+                }}
+                style={Styles.hourButton}>
+                <Text style={{fontSize: 18}}>-</Text>
+              </TouchableOpacity>
+              <Text style={{paddingHorizontal: 16, fontSize: 16}}>
+                {serviceState.vehicleCount || 1}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  const newCount = Math.min(
+                    3,
+                    (serviceState.vehicleCount || 1) + 1,
+                  );
+                  setServicesState((prev: any) => ({
+                    ...prev,
+                    [service.title]: {...serviceState, vehicleCount: newCount},
+                  }));
+                }}
+                style={Styles.hourButton}>
+                <Text style={{fontSize: 18}}>+</Text>
+              </TouchableOpacity>
+              <Text style={{marginLeft: 16, color: '#666'}}>
+                Max 3 vehicles
+              </Text>
+            </View>
+          </View>
+        );
+
+      default:
+        return (
+          <Text style={{color: '#666', paddingVertical: 8}}>
+            {service.subtitle || 'Service details'}
+          </Text>
+        );
+    }
+  };
+
+  const handleVechileChange = (index: number) => {
+    setSelectedVehicle(index);
+  };
+
   return (
     <>
       <View
@@ -80,7 +259,8 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
         </TouchableOpacity>
         <View>
           <View style={{width: '100%'}}>
-            <VStack space={4} mb={6} ml={1.5}>
+            <View style={{marginLeft: 6, marginBottom: 24, gap: 16}}>
+              {/* Pickup Location */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -92,7 +272,7 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
                   borderColor: '#ccc',
                 }}>
                 <Entypo
-                  name="location-pin" // Icon name (verify in documentation)
+                  name="location-pin"
                   size={20}
                   color="#000"
                   style={styles.icon}
@@ -102,6 +282,8 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
                   {pickupLocation}
                 </Text>
               </View>
+
+              {/* Dropoff Location */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -113,7 +295,7 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
                   borderColor: '#ccc',
                 }}>
                 <Entypo
-                  name="location-pin" // Icon name (verify in documentation)
+                  name="location-pin"
                   size={20}
                   color="#000"
                   style={styles.icon}
@@ -123,7 +305,7 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
                   {dropoffLocation}
                 </Text>
               </View>
-            </VStack>
+            </View>
           </View>
           <View style={{marginBottom: 10}}>
             <Text
@@ -169,7 +351,6 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
                 </Text>
                 <Text style={styles.arrow}>▼</Text>
               </TouchableOpacity>
-
               {showDatePicker && (
                 <DateTimePicker
                   value={date}
@@ -182,34 +363,81 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
                   }}
                 />
               )}
-
               {/*Time Picker*/}
-              <Select
-                minWidth={120}
-                marginLeft={5}
-                marginRight={5}
-                borderWidth={2}
-                fontSize={16}
-                borderColor={'#CFD3CF'}
-                backgroundColor={'#FCFCFC'}
-                borderRadius={12}
-                textDecorationColor={'black'}
-                fontWeight={'bold'}
-                selectedValue={selectedTime}
-                accessibilityLabel="Time"
-                placeholder="Time"
-                dropdownIcon={<Clock style={{marginRight: 20}} />}
-                _selectedItem={{
-                  bg: '#FFAF19',
-                  endIcon: <CheckIcon style={{color: 'white'}} size="5" />,
-                }}
-                onValueChange={itemValue => {
-                  setSelectedTime(itemValue);
+              <TouchableOpacity
+                onPress={() => setShowTimePicker(true)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 10,
+                  height: 50,
+                  borderWidth: 2,
+                  borderColor: '#CFD3CF',
+                  backgroundColor: '#FCFCFC',
+                  borderRadius: 15,
+                  justifyContent: 'space-between',
+                  marginLeft: 5,
+                  flex: 1,
                 }}>
-                {times?.map((item: any, index: number) => {
-                  return <Select.Item key={index} label={item} value={item} />;
-                })}
-              </Select>
+                <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000'}}>
+                  {selectedTime || 'Select Time'}
+                </Text>
+                <Clock style={{marginRight: 10}} />
+              </TouchableOpacity>
+
+              <Modal
+                visible={showTimePicker}
+                transparent={true}
+                animationType="fade">
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                  }}>
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      maxHeight: '50%',
+                      margin: 20,
+                      borderRadius: 16,
+                      padding: 16,
+                    }}>
+                    <ScrollView contentContainerStyle={{paddingBottom: 20}}>
+                      {times.map((time, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            {
+                              padding: 16,
+                              borderBottomWidth: 1,
+                              borderBottomColor: '#eee',
+                            },
+                            selectedTime === time && {
+                              backgroundColor: '#FFAF19',
+                              borderRadius: 8,
+                            },
+                          ]}
+                          onPress={() => {
+                            setSelectedTime(time);
+                            setShowTimePicker(false);
+                          }}>
+                          <Text
+                            style={[
+                              {fontSize: 16, color: '#333'},
+                              selectedTime === time && {
+                                color: 'white',
+                                fontWeight: 'bold',
+                              },
+                            ]}>
+                            {time}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </View>
+              </Modal>
             </View>
           </View>
         </View>
@@ -235,7 +463,7 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
               <TouchableOpacity
                 key={index}
                 style={{}}
-                onPress={() => setSelectedVehicle(index)}>
+                onPress={() => handleVechileChange(index)}>
                 <View
                   key={index}
                   style={{
@@ -291,18 +519,34 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
                           fontSize: 12,
                           fontWeight: 'bold',
                         }}>
-                        {item?.price != 0 ? (
-                          `$${item.price}`
-                        ) : (
+                        {/* Pricing  */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                          }}>
+                          <Text
+                            style={{
+                              color: 'green',
+                              fontWeight: 'bold',
+                              fontSize: 12,
+                            }}>
+                            From
+                          </Text>
                           <Text
                             style={{
                               color: '#333',
                               fontSize: 12,
-                              fontWeight: 600,
+                              paddingHorizontal: 5,
                             }}>
-                            Comming Soon{' '}
+                            $
+                            {index === 0
+                              ? vehiclePricing?.van?.minimumFare
+                              : index === 1
+                              ? vehiclePricing?.miniBus?.minimumFare
+                              : vehiclePricing?.bus?.minimumFare}
                           </Text>
-                        )}
+                        </View>
                       </Text>
                     </View>
                   </View>
@@ -353,7 +597,16 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
                         fontWeight: 'bold',
                         marginLeft: 10,
                       }}>
-                      {`$${Vechicle_data[selectedVehicle]?.details.per_person_price}`}
+                      {`$${(
+                        (vehiclePricing[
+                          selectedVehicle === 0
+                            ? 'van'
+                            : selectedVehicle === 1
+                            ? 'miniBus'
+                            : 'bus'
+                        ]?.minimumFare || 0) /
+                        Vechicle_data[selectedVehicle]?.capacity
+                      ).toFixed(2)}`}
                     </Text>
                     <View>
                       <Text style={{color: '#000'}}>/person</Text>
@@ -397,49 +650,58 @@ const BookingInputScreen: React.FC<BookingInputScreenProps> = ({
           </View>
         )}
         {selectedVehicle !== null && (
-          <View
-            style={{
-              marginVertical: 20,
-              height: 'auto',
-            }}>
-            {Additional_services?.map((item: any, index: number) => {
-              const isSelected = selecetedAdditonalServices === index;
-              return (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => setSelectedAdditonalServices(index)}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      padding: 20,
-                      borderRadius: 12,
-                      backgroundColor: '#F0EFEF',
-                      marginVertical: 5,
-                      borderWidth: 2,
-
-                      borderColor: isSelected ? '#FFAF19' : 'transparent',
-                    }}>
-                    <View>
-                      <Text style={{color: '#000', fontWeight: 500}}>
-                        {item?.title}
-                      </Text>
-                    </View>
-                    <View>
-                      {item?.price !== 0 ? (
-                        <Text
-                          style={{
-                            color: '#000',
-                            fontWeight: 500,
-                          }}>{`${item?.price} $`}</Text>
-                      ) : (
-                        <></>
+          <View style={{marginVertical: 10, gap: 10, height: 'auto'}}>
+            {selectedVehicle !== null && (
+              <View style={{marginVertical: 10, gap: 10, height: 'auto'}}>
+                {Additional_services.map(item => {
+                  const isSelected = selectedServices.includes(item.title);
+                  const serviceState = servicesState[item.title] || {};
+                  return (
+                    <View key={item.id}>
+                      <TouchableOpacity
+                        onPress={() => handleServicePress(item.title)}
+                        style={[
+                          Styles.serviceButton,
+                          isSelected && Styles.selectedServiceButton,
+                        ]}>
+                        <View style={Styles.serviceContent}>
+                          <View>
+                            <Text
+                              style={[
+                                Styles.serviceTitle,
+                                isSelected && Styles.selectedText,
+                              ]}>
+                              {item.title}
+                            </Text>
+                            {item.subtitle && (
+                              <Text
+                                style={[
+                                  Styles.serviceSubtitle,
+                                  isSelected && Styles.selectedText,
+                                ]}>
+                                {item.subtitle}
+                              </Text>
+                            )}
+                          </View>
+                          <Text
+                            style={[
+                              Styles.servicePrice,
+                              isSelected && Styles.selectedText,
+                            ]}>
+                            {item.price > 0 ? `$${item.price}` : 'Free'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                      {isSelected && (
+                        <View style={Styles.serviceDetailsContainer}>
+                          {renderServiceContent(item, serviceState)}
+                        </View>
                       )}
                     </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+                  );
+                })}
+              </View>
+            )}
           </View>
         )}
       </View>

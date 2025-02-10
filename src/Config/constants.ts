@@ -4,32 +4,25 @@ import Vech3_large from '../../assests/Vechicles/VITO_3_large.png';
 
 export const Additional_services = [
   {
-    id: 1,
+    id: 1, // Must be unique
     title: 'Split Payment',
-    subtitle: '',
-    toggle: true,
+    subtitle: 'Split among friends',
     price: 0,
+    type: 'split',
   },
   {
-    id: 2,
+    id: 2, // Must be unique
     title: 'Hourly Bookings',
     subtitle: 'Minimum 3 Hours',
-    toggle: false,
-    price: '10.0',
+    price: 60,
+    type: 'hourly',
   },
   {
-    id: 2,
+    id: 3, // Must be unique
     title: 'Add More Vehicles',
     subtitle: 'Book up to 3 Vehicles',
-    toggle: true,
-    price: '10.0',
-  },
-  {
-    id: 2,
-    title: 'Luggage Trailer',
-    subtitle: '',
-    toggle: true,
-    price: '10.0',
+    price: 0,
+    type: 'vehicle',
   },
 ];
 
@@ -37,13 +30,14 @@ export const Vechicle_data = [
   {
     id: 1,
     title: 'Small Van',
-    capacity: 8,
+    capacity: 7,
     price: 4.5,
     image: Vech1_large,
     details: {
       Full_name: 'Mercedes-Benz V-Class or Toyota Hi-Ac',
       per_person_price: 4.45,
-      minimum_capacity: 6,
+      minimum_capacity: 2,
+      maximum_capacity: 7,
       image: Vech1_large,
     },
   },
@@ -57,6 +51,7 @@ export const Vechicle_data = [
       Full_name: 'Mercedes-Van V-Class or Toyota Hi-Ac',
       per_person_price: 7.45,
       minimum_capacity: 4,
+      maximum_capacity: 10,
       image: Vech2_large,
     },
   },
@@ -69,7 +64,8 @@ export const Vechicle_data = [
     details: {
       Full_name: 'Mercedes-Bus V-Class or Toyota Hi-Ac',
       per_person_price: 17.45,
-      minimum_capacity: 16,
+      minimum_capacity: 10,
+      maximum_capacity: 30,
       image: Vech3_large,
     },
   },

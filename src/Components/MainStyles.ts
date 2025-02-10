@@ -175,4 +175,197 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  Container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  backButton: {
+    marginBottom: 16,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4A4A4A',
+    marginBottom: 24,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#CFD3CF',
+    backgroundColor: '#F0F0F0',
+  },
+  activeButton: {
+    borderColor: '#FFAF19',
+    backgroundColor: '#ffae194e',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  contactInputsContainer: {
+    gap: 12,
+  },
+  input: {
+    backgroundColor: '#F0F0F0',
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 16,
+  },
+  saveButton: {
+    backgroundColor: '#6B6B6B',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  savedContactContainer: {
+    backgroundColor: '#F0F0F0',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  savedContactInfo: {
+    gap: 4,
+  },
+  savedContactText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  savedContactPhone: {
+    fontSize: 14,
+    color: '#666',
+  },
+  paymentSection: {
+    marginBottom: 24,
+  },
+  paymentButton: {
+    backgroundColor: '#FFF9F0',
+    borderRadius: 8,
+    padding: 16,
+  },
+  paymentContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  paymentLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  paymentIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFAF19',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentIconText: {
+    fontSize: 18,
+  },
+  paymentType: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  paymentDetail: {
+    fontSize: 14,
+    color: '#666',
+  },
+  chevron: {
+    fontSize: 24,
+    color: '#666',
+  },
+  notesContainer: {
+    marginBottom: 24,
+  },
+  notesInput: {
+    backgroundColor: '#F0F0F0',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    fontSize: 16,
+  },
+  reviewButton: {
+    backgroundColor: '#FFAF19',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  reviewButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
+export const Styles = StyleSheet.create({
+  hourButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 4,
+  },
+  serviceButton: {
+    padding: 16,
+    borderWidth: 1,
+    backgroundColor: 'transparent',
+    borderColor: '#d7d7d7',
+    borderRadius: 12,
+  },
+  selectedServiceButton: {
+    backgroundColor: '#FFAF19',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  serviceContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  serviceTitle: {
+    fontWeight: 'bold',
+    color: '#666',
+  },
+  serviceSubtitle: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '400',
+  },
+  servicePrice: {
+    fontWeight: '600',
+    color: '#666',
+  },
+  selectedText: {
+    color: '#000',
+  },
+  serviceDetailsContainer: {
+    padding: 16,
+    backgroundColor: '#FFAF1920',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+  },
 });

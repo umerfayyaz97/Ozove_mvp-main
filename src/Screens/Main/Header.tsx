@@ -74,7 +74,7 @@ export default function Header({
               <Main_menu />
             </View>
           </TouchableOpacity>
-          <View style={{marginLeft: 20}}>
+          {/* <View style={{marginLeft: 20}}>
             <TouchableOpacity onPress={() => navigation.push('QRScanner')}>
               <View
                 style={{
@@ -104,7 +104,7 @@ export default function Header({
                 </View>
               </View>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
 
         {/* <View style={{flex: 1}}>

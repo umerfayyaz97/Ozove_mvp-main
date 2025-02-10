@@ -1,44 +1,36 @@
-import React, {useEffect, useState, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
+import {useAppSelector} from '../../../../hooks/useRedux';
 import {
-  StyleSheet,
-  View,
-  Platform,
-  PermissionsAndroid,
+  ActivityIndicator,
   Alert,
   Animated,
+  Dimensions,
+  Keyboard,
+  PermissionsAndroid,
+  Platform,
   Pressable,
-  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  FlatList,
-  Dimensions,
-  Keyboard,
+  View,
 } from 'react-native';
+import {useOzove} from '../../../../Context/ozoveContext';
+import Geolocation from '@react-native-community/geolocation';
+import {styles} from '../../../../Components/MainStyles';
+import PickupLocationIcon from '../../../../../assests/Pickup_icon.svg';
+import RewardsScreen from '../../components/RewardsScreen';
+import BookingInputScreen from '../../components/BookingInputScreen';
+import {Additional_services, Vechicle_data} from '../../../../Config/constants';
+import BookingDescription from '../../components/BookingDescription';
+import FinalBookingScreen from '../../components/FinalBookingScreen';
+import {StripeProvider} from '@stripe/stripe-react-native';
 import MapView, {Marker} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import Geolocation from '@react-native-community/geolocation';
-import PickupLocationIcon from '../../../assests/Pickup_icon.svg';
-import {useOzove} from '../../Context/ozoveContext';
-import {styles} from '../../Components/MainStyles';
+import Header from '../../Header';
 
-import RewardsScreen from './components/RewardsScreen';
-
-//Importing the images
-
-import Header from './Header';
-import {useAppSelector} from '../../hooks/useRedux';
-import FinalBookingScreen from './components/FinalBookingScreen';
-import {StripeProvider} from '@stripe/stripe-react-native';
-import BookingDescription from './components/BookingDescription';
-import BookingInputScreen from './components/BookingInputScreen';
-import AddCardScreen from './components/AddCardScreen';
-import {Additional_services, Vechicle_data} from '../../Config/constants';
-import {Timestamp} from '@react-native-firebase/firestore';
-import {ServiceState} from '../../Context/Types/ozove';
-
-export default function MainScreen({navigation}: any) {
+export default function Zen_MainScreen({navigation}: any) {
   const Bookings = useAppSelector(state => state.bookings.bookings);
   const [stripePublicKey, set_stripePublicKey] = useState<any>(null);
   const [location, setLocation] = useState(null);
@@ -73,21 +65,6 @@ export default function MainScreen({navigation}: any) {
     useState<any>();
   const [showPickupMark, set_showPickupMark] = useState(false);
   const [showDropoffMark, set_showDropoffMark] = useState(false);
-  const [vehiclePricing, setVehiclePricing] = useState<{
-    van?: any;
-    miniBus?: any;
-    bus?: any;
-  }>({
-    van: {minimumFare: 0}, // Default values to prevent NaN
-    miniBus: {minimumFare: 0},
-    bus: {minimumFare: 0},
-  });
-  const [servicesState, setServicesState] = useState<{
-    [key: number]: ServiceState;
-  }>({});
-
-  const [passengerCount, setPassengerCount] = useState(1);
-  const [TotalPrice, setTotalPrice] = useState(0);
 
   // Import from the Ozove Context functions
   const {
@@ -397,12 +374,6 @@ export default function MainScreen({navigation}: any) {
               showDatePicker={showDatePicker}
               dropoffLocation={dropoffLocation}
               pickupLocation={pickupLocation}
-              servicesState={servicesState}
-              setServicesState={setServicesState}
-              setVehiclePricing={setVehiclePricing}
-              vehiclePricing={vehiclePricing}
-              distance={distance}
-              duration={duration}
             />
 
             {selectedVehicle !== null && selectedTime !== '' && date && (
@@ -437,10 +408,6 @@ export default function MainScreen({navigation}: any) {
                       {
                         key: 'selectedAdditonalServices',
                         value: selecetedAdditonalServices,
-                      },
-                      {
-                        key: 'AdditionalServices',
-                        value: servicesState,
                       },
                     ];
                     _update_BookingData(formdata);
@@ -480,9 +447,6 @@ export default function MainScreen({navigation}: any) {
               setShowNextScreen={setShowNextScreen}
               notes={notes}
               set_notes={set_notes}
-              selectedVehicle={selectedVehicle}
-              setPassenger_Count={setPassengerCount}
-              passenger_Count={passengerCount}
             />
 
             {contactDetails !== '' ? (
@@ -509,10 +473,6 @@ export default function MainScreen({navigation}: any) {
                       {
                         key: 'driverNote',
                         value: notes,
-                      },
-                      {
-                        key: 'PassengerCount',
-                        value: passengerCount || 1,
                       },
                     ];
                     _update_BookingData(formdata);
@@ -560,13 +520,6 @@ export default function MainScreen({navigation}: any) {
               showCancilation={showCancilation}
               showNextScreen={showNextScreen}
               toggleCancilationPolicyModel={toggleCancilationPolicyModel}
-              vehiclePricing={vehiclePricing}
-              setVehiclePricing={setVehiclePricing}
-              distance={distance}
-              duration={duration}
-              setPassenger_Count={setPassengerCount}
-              passenger_Count={passengerCount}
-              additionalFeatures={servicesState}
             />
           </>
         );
@@ -669,10 +622,10 @@ export default function MainScreen({navigation}: any) {
                     strokeColor="#FFAF19"
                     strokeWidth={4}
                     onReady={result => {
+                      setDistance(result.distance); // Distance in meters
+                      setDuration(result.duration); // Duration in minutes
                       console.log(`Distance: ${result.distance} km`);
                       console.log(`Duration: ${result.duration} min`);
-                      setDuration(result.duration); // Duration in minutes
-                      setDistance(result.distance); // Distance in meters
                     }}
                   />
                 ) : null}
@@ -708,13 +661,21 @@ export default function MainScreen({navigation}: any) {
                 }}>
                 <Text
                   style={{
-                    color: '#000',
+                    color: '#fff',
                     fontWeight: 'bold',
                     fontSize: 14,
                   }}>
                   {`You have ${Bookings?.length || 0} booking${
                     Bookings?.length === 1 ? '' : 's'
                   }`}
+                </Text>
+                <Text
+                  style={{
+                    color: '#d9f1ff',
+                    fontSize: 10,
+                    marginTop: 5,
+                  }}>
+                  Tap here to view all your bookings
                 </Text>
               </View>
             </TouchableOpacity>

@@ -9,6 +9,8 @@ interface UserState {
     gender: string;
     phoneNumber: string;
     dob: string;
+    userType: string;
+    deviceDetails?: any;
   } | null;
 }
 
@@ -30,6 +32,8 @@ const UserSlice = createSlice({
         gender: 'Male',
         phoneNumber: action.payload.phoneNumber,
         dob: action.payload.dob,
+        userType: action.payload.userType,
+        deviceDetails: action.payload?.deviceDetails,
       };
 
       state.user = userState; // Update the user state
